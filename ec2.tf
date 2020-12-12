@@ -34,6 +34,13 @@ data "aws_availability_zones" "azs" {}
 
 data "aws_ebs_default_kms_key" "current" {}
 
+# Workaround the AWS API returning the KMS alias instead of the ARN
+# Reported in https://github.com/hashicorp/terraform-provider-aws/issues/13860
+# Workaround in https://github.com/hashicorp/terraform-provider-aws/issues/15137#issuecomment-691730866
+data "aws_kms_key" "current" {
+  key_id = data.aws_ebs_default_kms_key.current.key_arn
+}
+
 # Arguably not needed since I enable encryption explicitly, but just as backup
 resource "aws_ebs_encryption_by_default" "example" {
   enabled = true
@@ -65,7 +72,7 @@ resource "aws_instance" "instance" {
     volume_type           = "gp2"
     volume_size           = 20
     encrypted             = true
-    kms_key_id            = data.aws_ebs_default_kms_key.current.key_arn
+    kms_key_id            = data.aws_kms_key.current.arn
     delete_on_termination = false
   }
 
@@ -77,14 +84,12 @@ resource "aws_instance" "instance" {
   ipv6_address_count     = 1
   subnet_id              = aws_subnet.subnets[random_shuffle.az.result[0]].id
 
-  # Ignore the kms key id changing because the alias is resolved once the instance is created
-  # https://github.com/terraform-providers/terraform-provider-aws/issues/13860
-  # Ignore any AMI changes as well, once it's created we'll just use that version to avoid
+  # Ignore any AMI changes, once it's created we'll just use that version to avoid
   # cycling through instances
   # Key name is ignored because I changed the name after creation and I don't want to tear
   # the instance down
   lifecycle {
-    ignore_changes = [ami, key_name, root_block_device[0].kms_key_id]
+    ignore_changes = [ami, key_name]
   }
 
   user_data = file("cloud-init-user-data.yaml")
