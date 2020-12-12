@@ -86,10 +86,8 @@ resource "aws_instance" "instance" {
 
   # Ignore any AMI changes, once it's created we'll just use that version to avoid
   # cycling through instances
-  # Key name is ignored because I changed the name after creation and I don't want to tear
-  # the instance down
   lifecycle {
-    ignore_changes = [ami, key_name]
+    ignore_changes = [ami]
   }
 
   user_data = file("cloud-init-user-data.yaml")
