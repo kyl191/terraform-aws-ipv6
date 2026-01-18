@@ -86,13 +86,12 @@ resource "aws_security_group" "allow_default_ports" {
     create_before_destroy = true
   }
 
-  # SSH only on ipv6 - bad form to have it public, but it's key authed
-  # ipv6 only reduces the likelihood of scanning
   ingress {
     description      = "SSH"
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
 
