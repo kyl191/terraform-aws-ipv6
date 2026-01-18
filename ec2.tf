@@ -199,19 +199,3 @@ resource "aws_eip" "ip" {
   vpc      = true
   instance = aws_instance.instance.id
 }
-
-# And register the instance with Cloudflare
-resource "cloudflare_record" "server_A" {
-  zone_id = var.cf_zone
-  name    = var.domain
-  value   = aws_eip.ip.public_ip
-  type    = "A"
-}
-
-# And the IPv6 address as well
-resource "cloudflare_record" "server_AAAA" {
-  zone_id = var.cf_zone
-  name    = var.domain
-  value   = aws_instance.instance.ipv6_addresses[0]
-  type    = "AAAA"
-}
