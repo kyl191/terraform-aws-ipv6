@@ -1,32 +1,17 @@
-# Pick the most recent Fedora 32 build.
-# Will need to be updated for subsequent Fedora releases
-data "aws_ami" "fedora_cloud" {
-  owners      = [125523088429] # fedora infra
+# Pick the most recent build matching filters.
+data "aws_ami" "selected" {
+  for_each    = var.instance_config
+  owners      = [each.value.ami_owner]
   most_recent = true
 
   filter {
     name   = "name"
-    values = ["Fedora-Cloud-Base-32*"]
+    values = [each.value.ami_base_string]
   }
 
   filter {
     name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  filter {
-    name   = "block-device-mapping.volume-type"
-    values = ["gp2"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
+    values = [each.value.architecture]
   }
 }
 
@@ -57,19 +42,19 @@ resource "aws_key_pair" "key" {
   public_key = file("id_rsa.pub")
 }
 
-# Free tier eligible in us-west-2
 resource "aws_instance" "instance" {
+  for_each                = var.instance_config
   key_name                = aws_key_pair.key.key_name
-  ami                     = data.aws_ami.fedora_cloud.id
-  instance_type           = "t3.micro"
+  ami                     = data.aws_ami.selected[each.key].id
+  instance_type           = coalesce(each.value.instance_type, each.value.architecture == "arm64" ? "t4g.small" : "t3a.small")
   disable_api_termination = true
 
   tags = {
-    Name = "fedora"
+    Name = each.key
   }
 
   root_block_device {
-    volume_type           = "gp2"
+    volume_type           = "gp3"
     volume_size           = 20
     encrypted             = true
     kms_key_id            = data.aws_kms_key.current.arn
@@ -199,6 +184,7 @@ resource "aws_security_group" "allow_default_ports" {
 # Another "I probably don't need this", but just in case the instance fails
 # over and Auto-Recovery kicks in, but gets a new private IP off the subnet
 resource "aws_eip" "ip" {
-  vpc      = true
-  instance = aws_instance.instance.id
+  for_each = var.instance_config
+  domain   = "vpc"
+  instance = aws_instance.instance[each.key].id
 }
