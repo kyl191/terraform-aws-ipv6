@@ -21,6 +21,19 @@ variable "public_key_file" {
   default     = "sample_id_rsa.pub"
 }
 
+variable "ingress_rules" {
+  description = "Map of ingress rules. Protocol defaults to TCP if not specified."
+  type = map(object({
+    port     = number
+    protocol = optional(string)
+  }))
+  default = {
+    "SSH" = {
+      port = 22
+    }
+  }
+}
+
 variable "instance_config" {
   description = "Map of instance configurations"
   type = map(object({
