@@ -1,0 +1,34 @@
+# Sensitive variables
+db_password = "securepassword123"
+
+# Optional configuration
+enable_rds  = true
+aws_profile = "my-aws-profile"
+
+# Multi-instance configuration
+instance_config = {
+  "fedora-42-x86" = {
+    ami_base_string = "Fedora-Cloud-Base-AmazonEC2.x86_64-42-*"
+    ami_owner       = "125523088429"
+    architecture    = "x86_64"
+    instance_type   = "t3a.small"
+  }
+  "fedora-43-x86" = {
+    ami_base_string = "Fedora-Cloud-Base-AmazonEC2.x86_64-43-*"
+    ami_owner       = "125523088429"
+    architecture    = "x86_64"
+    instance_type   = "t3a.small"
+  }
+  "fedora-42-arm" = {
+    ami_base_string = "Fedora-Cloud-Base-AmazonEC2.aarch64-42-*"
+    ami_owner       = "125523088429"
+    architecture    = "arm64"
+    instance_type   = "t4g.small"
+  }
+  "fedora-43-arm" = {
+    ami_base_string = "Fedora-Cloud-Base-AmazonEC2.aarch64-43-*"
+    ami_owner       = "125523088429"
+    architecture    = "arm64"
+    instance_type   = "t4g.small"
+  }
+}
