@@ -129,12 +129,15 @@ resource "aws_security_group" "allow_default_ports" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-  ingress {
-    description     = "MySQL"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.allow_mysql.id]
+  dynamic "ingress" {
+    for_each = var.enable_rds ? [1] : []
+    content {
+      description     = "MySQL"
+      from_port       = 3306
+      to_port         = 3306
+      protocol        = "tcp"
+      security_groups = [aws_security_group.allow_mysql[0].id]
+    }
   }
 
   # Allow ICMP protocols
