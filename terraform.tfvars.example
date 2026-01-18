@@ -2,8 +2,9 @@
 db_password = "securepassword123"
 
 # Optional configuration
-enable_rds  = true
-aws_profile = "my-aws-profile"
+enable_rds      = true
+aws_profile     = "my-aws-profile"
+public_key_file = "sample_id_rsa.pub"
 
 # Multi-instance configuration
 instance_config = {

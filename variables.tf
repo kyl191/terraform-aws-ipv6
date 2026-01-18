@@ -15,6 +15,12 @@ variable "aws_profile" {
   default     = null
 }
 
+variable "public_key_file" {
+  description = "Path to the public key file"
+  type        = string
+  default     = "sample_id_rsa.pub"
+}
+
 variable "instance_config" {
   description = "Map of instance configurations"
   type = map(object({
