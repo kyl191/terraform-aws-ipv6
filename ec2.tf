@@ -75,7 +75,7 @@ resource "aws_instance" "instance" {
     ignore_changes = [ami]
   }
 
-  user_data = file("cloud-init-user-data.yaml")
+  user_data = file(var.user_data_file)
 }
 
 resource "aws_security_group" "allow_default_ports" {

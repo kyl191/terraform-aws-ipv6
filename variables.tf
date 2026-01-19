@@ -21,6 +21,12 @@ variable "public_key_file" {
   default     = "sample_id_rsa.pub"
 }
 
+variable "user_data_file" {
+  description = "Path to the cloud-init user data file"
+  type        = string
+  default     = "cloud-init-user-data.yaml"
+}
+
 variable "ingress_rules" {
   description = "Map of ingress rules. Protocol defaults to TCP if not specified."
   type = map(object({

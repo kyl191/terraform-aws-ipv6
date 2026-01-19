@@ -66,6 +66,7 @@ This Terraform module deploys EC2 instances with IPv6 support and an optional RD
 | `enable_rds` | Whether to create the RDS instance and related resources. | `bool` | `true` | no |
 | `aws_profile` | AWS CLI profile to use for authentication. | `string` | `null` | no |
 | `public_key_file` | Path to the public key file. | `string` | `"sample_id_rsa.pub"` | no |
+| `user_data_file` | Path to the cloud-init user data file. | `string` | `"cloud-init-user-data.yaml"` | no |
 | `ingress_rules` | Map of ingress rules (port, optional protocol). | `map(object)` | `{SSH=22}` | no |
 | `instance_config` | Map of instance configurations. See below for object structure. | `map(object)` | `{}` | no |
 

@@ -5,6 +5,7 @@ db_password = "securepassword123"
 enable_rds      = true
 aws_profile     = "my-aws-profile"
 public_key_file = "sample_id_rsa.pub"
+user_data_file  = "cloud-init-user-data.yaml"
 ingress_rules = {
   "SSH" = {
     port = 22
