@@ -42,12 +42,78 @@ resource "aws_key_pair" "key" {
   public_key = file(var.public_key_file)
 }
 
+resource "aws_launch_template" "instance" {
+  for_each      = var.use_asg ? var.instance_config : {}
+  name_prefix   = "${each.key}-"
+  image_id      = data.aws_ami.selected[each.key].id
+  instance_type = coalesce(each.value.instance_type, each.value.architecture == "arm64" ? "t4g.small" : "t3a.small")
+  key_name      = aws_key_pair.key.key_name
+
+  disable_api_termination = false
+
+  block_device_mappings {
+    device_name = data.aws_ami.selected[each.key].root_device_name
+    ebs {
+      volume_size           = 20
+      volume_type           = "gp3"
+      encrypted             = true
+      kms_key_id            = data.aws_kms_key.current.arn
+      delete_on_termination = true
+    }
+  }
+
+  credit_specification {
+    cpu_credits = "standard"
+  }
+
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.allow_default_ports.id]
+    ipv6_address_count          = 1
+  }
+
+  user_data = filebase64(var.user_data_file)
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = each.key
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [image_id]
+  }
+
+  update_default_version = true
+}
+
+resource "aws_autoscaling_group" "asg" {
+  for_each            = var.use_asg ? var.instance_config : {}
+  name                = each.key
+  desired_capacity    = 1
+  max_size            = 1
+  min_size            = 1
+  vpc_zone_identifier = [aws_subnet.subnets[random_shuffle.az.result[0]].id]
+
+  launch_template {
+    id      = aws_launch_template.instance[each.key].id
+    version = "$Default"
+  }
+
+  tag {
+    key                 = "Name"
+    value               = each.key
+    propagate_at_launch = true
+  }
+}
+
 resource "aws_instance" "instance" {
-  for_each                = var.instance_config
+  for_each                = var.use_asg ? {} : var.instance_config
   key_name                = aws_key_pair.key.key_name
   ami                     = data.aws_ami.selected[each.key].id
   instance_type           = coalesce(each.value.instance_type, each.value.architecture == "arm64" ? "t4g.small" : "t3a.small")
-  disable_api_termination = true
+  disable_api_termination = false
 
   tags = {
     Name = each.key
@@ -58,7 +124,7 @@ resource "aws_instance" "instance" {
     volume_size           = 20
     encrypted             = true
     kms_key_id            = data.aws_kms_key.current.arn
-    delete_on_termination = false
+    delete_on_termination = true
   }
 
   credit_specification {
@@ -69,14 +135,14 @@ resource "aws_instance" "instance" {
   ipv6_address_count     = 1
   subnet_id              = aws_subnet.subnets[random_shuffle.az.result[0]].id
 
-  # Ignore any AMI changes, once it's created we'll just use that version to avoid
-  # cycling through instances
   lifecycle {
     ignore_changes = [ami]
   }
 
   user_data = file(var.user_data_file)
 }
+
+
 
 resource "aws_security_group" "allow_default_ports" {
   name_prefix = "default_ports"
@@ -163,12 +229,4 @@ resource "aws_security_group" "allow_default_ports" {
   tags = {
     Name = "default_ports"
   }
-}
-
-# Another "I probably don't need this", but just in case the instance fails
-# over and Auto-Recovery kicks in, but gets a new private IP off the subnet
-resource "aws_eip" "ip" {
-  for_each = var.instance_config
-  domain   = "vpc"
-  instance = aws_instance.instance[each.key].id
 }

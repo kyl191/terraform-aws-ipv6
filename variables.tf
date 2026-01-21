@@ -50,3 +50,9 @@ variable "instance_config" {
   }))
   default = {}
 }
+
+variable "use_asg" {
+  description = "Whether to use Auto Scaling Groups or individual instances"
+  type        = bool
+  default     = true
+}
