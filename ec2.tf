@@ -94,7 +94,7 @@ resource "aws_autoscaling_group" "asg" {
   desired_capacity    = 1
   max_size            = 1
   min_size            = 1
-  vpc_zone_identifier = [aws_subnet.subnets[random_shuffle.az.result[0]].id]
+  vpc_zone_identifier = [for s in aws_subnet.subnets : s.id]
 
   launch_template {
     id      = aws_launch_template.instance[each.key].id
