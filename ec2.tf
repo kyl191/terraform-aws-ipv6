@@ -72,7 +72,7 @@ resource "aws_launch_template" "instance" {
     ipv6_address_count          = 1
   }
 
-  user_data = filebase64(var.user_data_file)
+  user_data = filebase64(coalesce(each.value.user_data_file, var.user_data_file))
 
   tag_specifications {
     resource_type = "instance"
@@ -139,7 +139,7 @@ resource "aws_instance" "instance" {
     ignore_changes = [ami]
   }
 
-  user_data = file(var.user_data_file)
+  user_data = file(coalesce(each.value.user_data_file, var.user_data_file))
 }
 
 

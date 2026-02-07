@@ -24,7 +24,7 @@ variable "public_key_file" {
 variable "user_data_file" {
   description = "Path to the cloud-init user data file"
   type        = string
-  default     = "cloud-init-user-data.yaml"
+  default     = "cloud-init-upgrade-packages.yaml"
 }
 
 variable "ingress_rules" {
@@ -47,6 +47,7 @@ variable "instance_config" {
     ami_owner       = string
     architecture    = string
     instance_type   = optional(string)
+    user_data_file  = optional(string)
   }))
   default = {}
 }
